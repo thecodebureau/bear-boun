@@ -1,0 +1,11 @@
+{
+  "ext": "js,dust",
+  "ignore": [
+		"bower_components",
+		"gulp",
+		"node_modules",
+		"public",
+		"samples",
+		"src"
+	]
+}
