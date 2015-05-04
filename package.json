@@ -1,0 +1,18 @@
+{
+  "name": "bear-boun",
+  "version": "0.2.0-pre",
+  "description": "Command line utilities",
+  "main": "./lib/index.js",
+  "bin": {
+    "bear-boun": "./bin/bear-boun.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "lodash": "^3.7.0",
+    "mongoose": "^3.8.27"
+  }
+}
