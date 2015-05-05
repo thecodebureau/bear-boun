@@ -11,7 +11,7 @@ var fs = require('fs');
 function getLayer2() {
 	var Layer2 = require('tcb-layer2');
 
-	var layer2 = new Layer2({ init: false });
+	var layer2 = new Layer2({ init: false, load: false });
 
 	return layer2;
 
