@@ -8,13 +8,13 @@ module.paths.unshift(PWD + '/node_modules');
 
 var path = require('path');
 var fs = require('fs');
+
 function getLayer2() {
 	var Layer2 = require('tcb-layer2');
 
 	var layer2 = new Layer2({ init: false, load: false });
 
 	return layer2;
-
 }
 
 function createUser(email, password) {
@@ -22,7 +22,12 @@ function createUser(email, password) {
 		console.log("Usage: bear-boun create-user email password");
 		process.exit(0);
 	}
-	var epiphany = getLayer2().init().epiphany;
+
+	console.log('about to load');
+
+	var epiphany = getLayer2().load().epiphany;
+
+	console.log(epiphany.directories);
 
 	var User = epiphany.mongoose.model('User');
 
