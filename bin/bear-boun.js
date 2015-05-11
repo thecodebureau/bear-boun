@@ -106,9 +106,16 @@ function gulpDependencies() {
 }
 
 function gulpConfig() {
-	var layer2 = getLayer2();
+	var epiphany;
 
-	var config = require(path.join(PWD, 'gulp', 'config.js'))(layer2.epiphany.config);
+	try {
+		epiphany = getLayer2().load().epiphany;
+	} catch (e) {
+		var Epiphany = require('tcb-epiphany');
+		epiphany = new Epiphany({ load: false, init: false }).load();
+	}
+
+	var config = require(path.join(PWD, 'gulp', 'config.js'))(epiphany.config);
 
 	fs.writeFileSync(path.join(PWD, 'gulpconfig.js'), 'module.exports = ' + JSON.stringify(config, null, '\t'));
 	console.log('BEAR-BOUN: Gulp configurations written to PWD/gulpconfig.js.');
