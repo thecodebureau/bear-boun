@@ -28,6 +28,8 @@ function createUser(email, password) {
 
 	epiphany.mongoose.connect(epiphany.config.mongo.uri);
 
+	var User = epiphany.mongoose.model('User');
+
 	var user = new User({email: email, local: { password: password } } );
 
 	user.save(function(err, user){
