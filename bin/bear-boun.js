@@ -1,5 +1,7 @@
 #!/bin/env node
 
+var _ = require('lodash');
+
 
 var PWD = process.env.PWD;
 var ENV = process.env.NODE_ENV || 'development';
@@ -135,8 +137,6 @@ function gulpConfig() {
 	fs.writeFileSync(path.join(PWD, 'gulpconfig.js'), 'module.exports = ' + JSON.stringify(config, null, '\t'));
 	console.log('BEAR-BOUN: Gulp configurations written to PWD/gulpconfig.js.');
 }
-
-var _ = require('lodash');
 
 var argv = process.argv.slice(2);
 
