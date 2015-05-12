@@ -22,14 +22,9 @@ function createUser(email, password) {
 		console.log("Usage: bear-boun create-user email password");
 		process.exit(0);
 	}
+	var epiphany = getLayer2().epiphany;
 
-	console.log('about to load');
-
-	var epiphany = getLayer2().load().epiphany;
-
-	console.log(epiphany.directories);
-
-	var User = epiphany.mongoose.model('User');
+	epiphany.loaders.mongoose(epiphany.directories.models, epiphany.directories.plugins, epiphany.directories.schemas);
 
 	epiphany.mongoose.connect(epiphany.config.mongo.uri);
 
@@ -38,6 +33,24 @@ function createUser(email, password) {
 	user.save(function(err, user){
 		if(err) console.error(err);
 		else console.log("Saved user: " + user.email);
+		process.exit(0);
+	});
+}
+
+function createOrganization() {
+	var epiphany = getLayer2().epiphany;
+
+	epiphany.loaders.mongoose(epiphany.directories.models, epiphany.directories.plugins, epiphany.directories.schemas);
+
+	var Organization = epiphany.mongoose.model('Organization');
+
+	epiphany.mongoose.connect(epiphany.config.mongo.uri);
+
+	var organization = new Organization();
+
+	organization.save(function(err, organization){
+		if(err) console.error(err);
+		else console.log("Saved empty organization");
 		process.exit(0);
 	});
 }
@@ -128,6 +141,8 @@ var argv = process.argv.slice(2);
 switch(argv[0]) {
 	case 'create-user':
 		return createUser.apply(null, argv.slice(1));
+	case 'create-organization':
+		return createOrganization.apply(null, argv.slice(1));
 	case 'gulp':
 		switch(argv[1]) {
 			case 'setup':
