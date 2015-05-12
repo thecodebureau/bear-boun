@@ -122,7 +122,7 @@ function gulpConfig() {
 	var epiphany;
 
 	try {
-		epiphany = getLayer2().load().epiphany;
+		epiphany = getLayer2().epiphany;
 	} catch (e) {
 		var Epiphany = require('tcb-epiphany');
 		epiphany = new Epiphany({ load: false, init: false }).load();
