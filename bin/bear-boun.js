@@ -2,7 +2,6 @@
 
 var _ = require('lodash');
 
-
 var PWD = process.env.PWD;
 var ENV = process.env.NODE_ENV || 'development';
 
@@ -24,9 +23,12 @@ function createUser(email, password) {
 		console.log("Usage: bear-boun create-user email password");
 		process.exit(0);
 	}
+
 	var epiphany = getLayer2().epiphany;
 
-	epiphany.loaders.mongoose(epiphany.directories.models, epiphany.directories.plugins, epiphany.directories.schemas);
+	//epiphany.loaders.mongoose(epiphany.directories.models, epiphany.directories.plugins, epiphany.directories.schemas);
+
+	require('../models/user')(epiphany.mongoose);
 
 	epiphany.mongoose.connect(epiphany.config.mongo.uri);
 
@@ -44,11 +46,11 @@ function createUser(email, password) {
 function createOrganization() {
 	var epiphany = getLayer2().epiphany;
 
-	epiphany.loaders.mongoose(epiphany.directories.models, epiphany.directories.plugins, epiphany.directories.schemas);
-
-	var Organization = epiphany.mongoose.model('Organization');
+	require('../models/organization')(epiphany.mongoose);
 
 	epiphany.mongoose.connect(epiphany.config.mongo.uri);
+
+	var Organization = epiphany.mongoose.model('Organization');
 
 	var organization = new Organization();
 
