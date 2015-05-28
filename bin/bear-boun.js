@@ -17,7 +17,7 @@ function getEpiphany() {
 	try {
 		epiphany = new require('hatter')({ init: false, load: false }).epiphany.load();
 	} catch (e) {
-		epiphany = new require({ load: false, init: false }).load();
+		epiphany = new require('epiphany')({ load: false, init: false }).load();
 	}
 
 	return epiphany;

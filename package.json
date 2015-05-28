@@ -1,6 +1,6 @@
 {
   "name": "bear-boun",
-  "version": "0.2.0-pre",
+  "version": "0.2.0-pre.2",
   "description": "Command line utilities",
   "main": "./lib/index.js",
   "bin": {
