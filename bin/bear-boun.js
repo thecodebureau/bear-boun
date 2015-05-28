@@ -10,12 +10,17 @@ module.paths.unshift(PWD + '/node_modules');
 var path = require('path');
 var fs = require('fs');
 
-function getLayer2() {
-	var Layer2 = require('tcb-layer2');
+function getEpiphany() {
 
-	var layer2 = new Layer2({ init: false, load: false });
+	var epiphany;
 
-	return layer2;
+	try {
+		epiphany = new require('hatter')({ init: false, load: false }).epiphany.load();
+	} catch (e) {
+		epiphany = new require({ load: false, init: false }).load();
+	}
+
+	return epiphany;
 }
 
 function createUser(email, password) {
@@ -24,7 +29,7 @@ function createUser(email, password) {
 		process.exit(0);
 	}
 
-	var epiphany = getLayer2().epiphany;
+	var epiphany = getEpiphany().epiphany;
 
 	//epiphany.loaders.mongoose(epiphany.directories.models, epiphany.directories.plugins, epiphany.directories.schemas);
 
@@ -44,7 +49,7 @@ function createUser(email, password) {
 }
 
 function createOrganization() {
-	var epiphany = getLayer2().epiphany;
+	var epiphany = getEpiphany().epiphany;
 
 	require('../models/organization')(epiphany.mongoose);
 
@@ -125,14 +130,7 @@ function gulpDependencies() {
 }
 
 function gulpConfig() {
-	var epiphany;
-
-	try {
-		epiphany = getLayer2().epiphany;
-	} catch (e) {
-		var Epiphany = require('tcb-epiphany');
-		epiphany = new Epiphany({ load: false, init: false }).load();
-	}
+	var epiphany = getEpiphany();
 
 	var config = require(path.join(PWD, 'gulp', 'config.js'))(epiphany.config);
 
