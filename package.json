@@ -1,17 +1,29 @@
 {
-  "name": "bear-boun",
-  "version": "0.2.0-pre.2",
-  "description": "Command line utilities",
-  "main": "./lib/index.js",
+  "name": "boun",
+  "version": "0.2.0",
+  "description": "Helps to boun TCB applications.",
+  "main": "bin/boun.js",
   "bin": {
-    "bear-boun": "./bin/bear-boun.js"
+    "boun": "boun.js"
   },
+  "dependencies": {
+    "lodash": "^3.7.0"
+  },
+  "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "lodash": "^3.7.0"
-  }
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thecodebureau/boun.git"
+  },
+  "author": "The Code Bureau <info@thecodebureau.com> (https://thecodebureau.com)",
+  "contributors": [
+    "Linus Miller <linus.miller@thecodebureau.com>"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/thecodebureau/boun/issues"
+  },
+  "homepage": "https://github.com/thecodebureau/boun#readme"
 }
