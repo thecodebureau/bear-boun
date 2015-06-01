@@ -4,7 +4,7 @@
   "description": "Helps to boun TCB applications.",
   "main": "bin/boun.js",
   "bin": {
-    "boun": "boun.js"
+    "boun": "bin/boun.js"
   },
   "dependencies": {
     "lodash": "^3.7.0"
