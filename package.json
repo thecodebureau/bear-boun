@@ -1,6 +1,6 @@
 {
   "name": "boun",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Helps to boun TCB applications.",
   "main": "bin/boun.js",
   "bin": {
