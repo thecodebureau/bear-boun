@@ -15,7 +15,8 @@ function getEpiphany() {
 	var epiphany;
 
 	try {
-		epiphany = new require('hatter')({ init: false, load: false }).epiphany;
+		var Hatter = require('hatter');
+		epiphany = new Hatter({ init: false, load: false }).epiphany;
 	} catch (e) {
 		epiphany = new require('epiphany')({ load: false, init: false });
 	}
@@ -49,15 +50,15 @@ function createUser(email, password) {
 }
 
 function createOrganization() {
-	var epiphany = getEpiphany().epiphany;
+	var epiphany = getEpiphany();
 
-	require('../models/organization')(epiphany.mongoose);
-
-	epiphany.mongoose.connect(epiphany.config.mongo.uri);
+	epiphany.load();
 
 	var Organization = epiphany.mongoose.model('Organization');
 
 	var organization = new Organization();
+
+	epiphany.mongoose.connect(epiphany.config.mongo.uri);
 
 	organization.save(function(err, organization){
 		if(err) console.error(err);
@@ -95,13 +96,17 @@ function gulpSetup() {
 }
 
 function gulpDependencies() {
-	var package = require(path.join(PWD, 'package.json'));
-	var originalDependencies = package.dependencies;
-	var gulpPackage = require(path.join(PWD, 'gulp', 'package.json'));
+	//var package = require(path.join(PWD, 'package.json'));
+	//var originalDependencies = package.dependencies;
+	var pkg = require(path.join(PWD, 'gulp', 'package.json'));
 
-	package.dependencies = _.extend({}, package.dependencies, gulpPackage.dependencies, gulpPackage._environmentDependencies[ENV]);
+	var dependencies = _.map(_.extend({}, pkg.dependencies, pkg._environmentDependencies[ENV]), function(value, key) {
+		return key + '@' + value;
+	});
 
-	fs.writeFileSync(path.join(PWD, 'package.json'), JSON.stringify(package, null, '\t'));
+	//package.dependencies = _.extend({}, package.dependencies, gulpPackage.dependencies, );
+
+	//fs.writeFileSync(path.join(PWD, 'package.json'), JSON.stringify(package, null, '  '));
 
 	var spawn = require('child_process').spawn;
 
@@ -114,7 +119,7 @@ function gulpDependencies() {
 	npmPrune.on('close', function() {
 		console.log('BEAR-BOUN: Finished removing extraneous packs, installing...');
 
-		var npmInstall = spawn('npm',  ['install']);
+		var npmInstall = spawn('npm',  ['install'].concat(dependencies));
 
 		npmInstall.stdout.on('data', function(chunk) {
 			process.stdout.write(chunk);
@@ -123,8 +128,8 @@ function gulpDependencies() {
 		npmInstall.on('close', function() {
 			console.log('BEAR-BOUN: Finished installing...');
 
-			package.dependencies = originalDependencies;
-			fs.writeFileSync(path.join(PWD, 'package.json'), JSON.stringify(package, null, '\t'));
+			//package.dependencies = originalDependencies;
+			//fs.writeFileSync(path.join(PWD, 'package.json'), JSON.stringify(package, null, '  ') + '\n');
 		});
 	});
 }
