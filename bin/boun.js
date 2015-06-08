@@ -30,12 +30,12 @@ function createUser(email, password) {
 		process.exit(0);
 	}
 
-	var epiphany = getEpiphany().epiphany;
+	var epiphany = getEpiphany().load();
+
 
 	//epiphany.loaders.mongoose(epiphany.directories.models, epiphany.directories.plugins, epiphany.directories.schemas);
 
-	require('../models/user')(epiphany.mongoose);
-
+	//require('../models/user')(epiphany.mongoose);
 	epiphany.mongoose.connect(epiphany.config.mongo.uri);
 
 	var User = epiphany.mongoose.model('User');
