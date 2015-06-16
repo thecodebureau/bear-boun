@@ -119,9 +119,10 @@ function gulpDependencies() {
 	npmPrune.on('close', function() {
 		console.log('BEAR-BOUN: Finished removing extraneous packs, installing...');
 
-		var npmInstall = spawn('npm',  ['install'].concat(dependencies));
+		var npmInstall = spawn('sh',  ['-c', [ 'npm', 'install'].concat(dependencies).join(' ') ]);
 
 		npmInstall.stdout.on('data', function(chunk) {
+			console.log('on data');
 			process.stdout.write(chunk);
 		});
 
