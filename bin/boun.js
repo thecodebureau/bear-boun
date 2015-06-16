@@ -96,57 +96,34 @@ function gulpSetup() {
 }
 
 function gulpDependencies() {
-	//var package = require(path.join(PWD, 'package.json'));
-	//var originalDependencies = package.dependencies;
-	var pkg = require(path.join(PWD, 'gulp', 'package.json'));
+	var pkg = require(path.join(PWD, 'package.json'));
+	var gulpPkg = require(path.join(PWD, 'gulp', 'package.json'));
 
-	var dependencies = _.map(_.extend({}, pkg.dependencies, pkg._environmentDependencies[ENV]), function(value, key) {
-		return key + '@' + value;
-	});
+	var originalDependencies = pkg.dependencies;
 
-	//package.dependencies = _.extend({}, package.dependencies, gulpPackage.dependencies, );
+	//var dependencies = _.map(_.extend({}, pkg.dependencies, pkg._environmentDependencies[ENV]), function(value, key) {
+	//	return key + '@' + value;
+	//});
 
-	//fs.writeFileSync(path.join(PWD, 'package.json'), JSON.stringify(package, null, '  '));
+	pkg.dependencies = _.extend({}, pkg.dependencies, gulpPkg.dependencies, gulpPkg._environmentDependencies[ENV]);
+
+	fs.writeFileSync(path.join(PWD, 'package.json'), JSON.stringify(pkg, null, '  '));
 
 	var spawn = require('child_process').spawn;
 
-	var npmPrune = spawn('npm', [ 'prune' ]);
-
-	npmPrune.stdout.on('data', function(chunk) {
-		process.stdout.write(chunk);
-	});
+	var npmPrune = spawn('npm', [ 'prune' ], { stdio: 'inherit' });
 
 	npmPrune.on('close', function() {
-		console.log('BEAR-BOUN: Finished removing extraneous packs, installing...');
+		console.log('BOUN: Finished removing extraneous packs, installing...');
 
-		console.log(['install'].concat(dependencies));
-		var npmInstall = spawn('npm',  ['install'].concat(dependencies), { stdio: 'inherit' });
-		//var npmInstall = spawn('npm',  ['install']);
-
-		//npmInstall.stdout.on('data', function(chunk) {
-		//	console.log('on data');
-		//	process.stdout.write(chunk);
-		//});
-
-		//npmInstall.stderr.on('data', function(chunk) {
-		//	console.log('on stderr[data]');
-		//	process.stdout.write(chunk);
-		//});
-
-		npmInstall.on('error', function() {
-			console.log('on error');
-		});
-
-		npmInstall.on('exit', function() {
-			console.log('on exit');
-		});
+		//var npmInstall = spawn('npm',  ['install'].concat(dependencies), { stdio: 'inherit' });
+		var npmInstall = spawn('npm',  ['install'], { stdio: 'inherit' });
 
 		npmInstall.on('close', function() {
-			console.log('on close');
-			console.log('BEAR-BOUN: Finished installing...');
+			console.log('BOUN: Finished installing, restoring package.json...');
 
-			//package.dependencies = originalDependencies;
-			//fs.writeFileSync(path.join(PWD, 'package.json'), JSON.stringify(package, null, '  ') + '\n');
+			pkg.dependencies = originalDependencies;
+			fs.writeFileSync(path.join(PWD, 'package.json'), JSON.stringify(pkg, null, '  ') + '\n');
 		});
 	});
 }
