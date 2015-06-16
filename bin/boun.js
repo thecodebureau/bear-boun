@@ -128,10 +128,10 @@ function gulpDependencies() {
 			process.stdout.write(chunk);
 		});
 
-		npmInstall.stderr.on('data', function(chunk) {
-			console.log('on stderr[data]');
-			process.stdout.write(chunk);
-		});
+		//npmInstall.stderr.on('data', function(chunk) {
+		//	console.log('on stderr[data]');
+		//	process.stdout.write(chunk);
+		//});
 
 		npmInstall.on('error', function() {
 			console.log('on error');
