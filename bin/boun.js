@@ -49,6 +49,35 @@ function createUser(email, password) {
 	});
 }
 
+function changePassword(email, password) {
+	if(!email || !password) {
+		console.log("Usage: bear-boun create-user email password");
+		process.exit(0);
+	}
+
+	var epiphany = getEpiphany().load();
+
+	epiphany.mongoose.connect(epiphany.config.mongo.uri);
+
+	var User = epiphany.mongoose.model('User');
+
+	User.findOne({ email: email }, function(err, user) {
+		if(err) return console.error(err);
+
+		if(!user) return console.error(new Error('No user with that email'));
+
+		user.local = user.local || {};
+		user.local.password = password;
+
+		user.save(function(err, user){
+			if(err) console.error(err);
+			else console.log("Updated password for user: " + user.email);
+			process.exit(0);
+		});
+	});
+}
+
+
 function createOrganization() {
 	var epiphany = getEpiphany();
 
@@ -142,6 +171,8 @@ var argv = process.argv.slice(2);
 switch(argv[0]) {
 	case 'create-user':
 		return createUser.apply(null, argv.slice(1));
+	case 'change-password':
+		return changePassword.apply(null, argv.slice(1));
 	case 'create-organization':
 		return createOrganization.apply(null, argv.slice(1));
 	case 'gulp':
