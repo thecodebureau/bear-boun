@@ -119,14 +119,30 @@ function gulpDependencies() {
 	npmPrune.on('close', function() {
 		console.log('BEAR-BOUN: Finished removing extraneous packs, installing...');
 
-		var npmInstall = spawn('sh',  ['-c', [ 'npm', 'install'].concat(dependencies).join(' ') ]);
+		console.log(['install'].concat(dependencies));
+		var npmInstall = spawn('npm',  ['install'].concat(dependencies));
+		//var npmInstall = spawn('npm',  ['install']);
 
 		npmInstall.stdout.on('data', function(chunk) {
 			console.log('on data');
 			process.stdout.write(chunk);
 		});
 
+		npmInstall.stderr.on('data', function(chunk) {
+			console.log('on stderr[data]');
+			process.stdout.write(chunk);
+		});
+
+		npmInstall.on('error', function() {
+			console.log('on error');
+		});
+
+		npmInstall.on('exit', function() {
+			console.log('on exit');
+		});
+
 		npmInstall.on('close', function() {
+			console.log('on close');
 			console.log('BEAR-BOUN: Finished installing...');
 
 			//package.dependencies = originalDependencies;
