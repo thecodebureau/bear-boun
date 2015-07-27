@@ -1,0 +1,99 @@
+{>"layout"/}
+
+{<content}
+<div class="row">
+	<section data-title="Welcome" class="welcome">
+		<header class="col">
+			<h1>Welcome / Välkommen!</h1>
+			<h2><span>The Code Bureau:</span> Advanced Web Development &amp; Design</h2>
+		</header>
+		<div class="col m-6">
+			<p>The Code Bureau is a web development & design firm based in Lund,
+			Sweden. Unlike most other web designers/developers, all our employees
+			have a background in mathematics or computer science.</p>
+			<p class="emph">We make it our business to stay up to date on the latest
+			trends and technologies. The applications we create are always
+			state-of-the-art and built for the future. When you employ us, you wont need to update your
+			products for years.</p>
+		</div>
+		<div class="col m-6">
+			<p>We cater a range of different services to our customers;
+			always focusing on the development of code for the web. Our love for code
+			and the new possibilities of the web enable us to do almost anything. Just ask.</p>
+			<p class="emph">The Code Bureau is a fairly new venture, and as such we
+			are still building a portfolio of show cases. During this time we
+			are offering our services at greatly reduced prices.</p>
+		</div>
+	</section>
+	<section data-title="What We Do" class="what-we-do">
+		<header class="col">
+			<h1>What We Do</h1>
+		</header>
+		<div class="item col m-4">
+			<h2><span>Web Pages</span></h2>
+			<p>Obviously we create websites. Essentially everything we create are
+			web sites of varying complexity. However, we refer to web sites as our
+			entry level products that mainly focus on presentation of information without excessive functionality.</p>
+		</div>
+		<div class="item col m-4">
+			<h2><span>Web Apps</span></h2>
+			<p>Web apps are advanced web sites that emulate functionality usually
+			found in native apps or programs.</p>
+			
+			<p>Web apps have, unlike native apps, the benefit of running on all
+			computers and devices. The users only need a browser to access its
+			functionality.</p>
+		</div>
+		<div class="item col m-4">
+			<h2><span>Web Games</span></h2>
+			<p>As the name suggests, web games are games made to run in a browser on any device.</p>
+		</div>
+	</section>
+	<section data-title="Why Choose Us" class="why-choose-us">
+		<header class="col">
+			<h1>Why Choose Us?</h1>
+		</header>
+		<div class="col">
+			<ol>
+				<li>
+					<h2>We know code</h2>
+					<p>Most web designers or developers are artistically creative individuals. However,
+					to create stable, reliable web sites and apps you need to know more than design. We
+					are a collection of individuals that both truly love and know code, computers and the web.</p>
+				</li>
+				<li>
+					<h2>SEO</h2>
+					<p>Search Engine Optimization is probably the most important
+					factor for a web sites success. It is also constantly changing, and your web sites
+					need to be updated constantly to stay ahead of the competition.</p>
+					<p>One of the most important factors for good SEO today is the speed
+					of your website. Using a framework like WordPress will doom you to a
+					slow web site with poor search engine performance. Our web sites
+					are many, many times faster than those built with WordPress or similar.</p>
+				</li>
+				<li>
+					<h2>Future Proof</h2>
+					<p>The internet and web browsers have become infinately more advanced the last few years. Web sites are quickly becoming
+					more like apps and the user experience can be greatly improved. Our love for code means we understand the trends, and can
+					make decisions that ensure our products will be up to date for years to come. No WordPress or PHP here.</p>
+				</li>
+			</ol>
+		</div>
+	</section>
+	<section data-title="Contact" class="contact">
+		<header class="col">
+			<h1>Contact</h1>
+		</header>
+		<div typeof="Organization" class="col">
+			<p property="telephone" class="phone">+46 (0) 708 922 122</p>
+			<p property="email" class="email"><a href="mailto:info@thecodebureau.com">info@thecodebureau.com</a></p>
+			<p class="address"><span property="legalName">TCB IT & Development AB</span><br />
+			Ideon Agora<br />
+			<span typeof="PostalAddress" property="address"> 
+				<span property="streetAddress">Scheelevägen 15</span><br />
+				<span property="postalCode">22363</span> <span property="addressLocality">Lund</span><br />
+				<span property="addressCountry">Sweden</span></p>
+			</span>
+		</div>
+</div>
+{/content}
