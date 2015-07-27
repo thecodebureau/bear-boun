@@ -123,35 +123,48 @@ function setup() {
 	});
 }
 
-function install() {
+function install(prune) {
+	// TODO restore package.json on error or exit
+	prune = prune === '-p';
+
+	var spawn = require('child_process').spawn;
+	// NOTE we write a new package.json file for effeciency. Calling npm install with array of packages
+	// will redownload and install even if correct version already exists.
 	var pkg = require(p.join(PWD, 'package.json'));
 	var gulpPkg = require(p.join(PWD, 'gulp', 'package.json'));
-
-	// TODO maybe not prune. then we wouldn't need to overwrite package.json file
 	var originalDependencies = pkg.dependencies;
 
 	pkg.dependencies = _.extend({}, pkg.dependencies, gulpPkg.dependencies, gulpPkg._environmentDependencies[ENV]);
 
 	fs.writeFileSync(p.join(PWD, 'package.json'), JSON.stringify(pkg, null, '  '));
 
-	var spawn = require('child_process').spawn;
+	//var dependencies = _.extend({}, pkg.dependencies, gulpPkg.dependencies);
+	//dependencies = _.pairs(dependencies).map(function(arr) {
+	//	return arr[0] + '@' + arr[1];
+	//});
 
-	var npmPrune = spawn('npm', [ 'prune' ], { stdio: 'inherit' });
+	if(prune) {
+		var npmPrune = spawn('npm', [ 'prune' ], { stdio: 'inherit' });
 
-	npmPrune.on('close', function() {
-		console.log('BOUN: Finished removing extraneous packs, installing...');
+		npmPrune.on('close', function() {
+			console.log('BOUN: Finished removing extraneous packs, installing...');
+			run();
+		});
+	} else {
+		run();
+	}
 
-		//var npmInstall = spawn('npm',  ['install'].concat(dependencies), { stdio: 'inherit' });
+	function run() {
 		var npmInstall = spawn('npm',  ['install'], { stdio: 'inherit' });
+		//var npmInstall = spawn('npm',  ['install'].concat(dependencies), { stdio: 'inherit' });
 
 		npmInstall.on('close', function() {
-			console.log('BOUN: Finished installing, restoring package.json...');
-
 			pkg.dependencies = originalDependencies;
-
 			writePackage(pkg);
+
+			console.log('BOUN: All dependencies installed successfully.');
 		});
-	});
+	}
 }
 
 function dependencies() {
