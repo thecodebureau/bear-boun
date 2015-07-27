@@ -14,6 +14,9 @@ var prompt = require('prompt');
 
 prompt.message = "[" + "?".yellow + "]";
 
+function writePackage(pkg) {
+	fs.writeFileSync(p.join(PWD, 'package.json'), JSON.stringify(pkg, null, '  ') + '\n');
+}
 function createUser(email, password) {
 	if(!email || !password) {
 		console.log("Usage: bear-boun create-user email password");
@@ -145,9 +148,22 @@ function install() {
 			console.log('BOUN: Finished installing, restoring package.json...');
 
 			pkg.dependencies = originalDependencies;
-			fs.writeFileSync(p.join(PWD, 'package.json'), JSON.stringify(pkg, null, '  ') + '\n');
+
+			writePackage(pkg);
 		});
 	});
+}
+
+function dependencies() {
+	var modules = require(p.join(PWD, 'server/modules.js'));
+	var appPkg = require(p.join(PWD, 'package.json'));
+
+	modules.forEach(function(module) {
+		var pkg = require(p.join(/\.\//.test(module) ? PWD : '', module, 'package.json'));
+
+		_.extend(appPkg.dependencies, pkg.dependencies);
+	});
+	writePackage(appPkg);
 }
 
 function gulpConfig() {
