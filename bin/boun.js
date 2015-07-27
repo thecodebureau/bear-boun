@@ -2,14 +2,19 @@
 
 var _ = require('lodash');
 
-var PWD = process.env.PWD;
-var ENV = process.env.NODE_ENV || 'development';
+global.PWD = process.env.PWD;
+global.ENV = process.env.NODE_ENV || 'development';
 
 module.paths.unshift(PWD + '/node_modules');
 
-var path = require('path');
+var p = require('path');
 var fs = require('fs');
 
+var prompt = require('prompt');
+
+prompt.message = "[" + "?".yellow + "]";
+
+var inquirer = require('inquirer');
 function getEpiphany() {
 
 	var epiphany;
@@ -119,14 +124,14 @@ function gulpSetup() {
 	});
 
 	gitSubmoduleAdd.on('close', function() {
-		fs.symlinkSync((path.join(PWD, 'gulp', 'gulpfile.js')), path.join(PWD, 'gulpfile.js'));
+		fs.symlinkSync((p.join(PWD, 'gulp', 'gulpfile.js')), p.join(PWD, 'gulpfile.js'));
 		console.log('BEAR-BOUN: Finished cloning tcb-gulp into project folder, and symlinked gulpfile.js...');
 	});
 }
 
-function gulpDependencies() {
-	var pkg = require(path.join(PWD, 'package.json'));
-	var gulpPkg = require(path.join(PWD, 'gulp', 'package.json'));
+function installDependencies() {
+	var pkg = require(p.join(PWD, 'package.json'));
+	var gulpPkg = require(p.join(PWD, 'gulp', 'package.json'));
 
 	var originalDependencies = pkg.dependencies;
 
@@ -136,7 +141,7 @@ function gulpDependencies() {
 
 	pkg.dependencies = _.extend({}, pkg.dependencies, gulpPkg.dependencies, gulpPkg._environmentDependencies[ENV]);
 
-	fs.writeFileSync(path.join(PWD, 'package.json'), JSON.stringify(pkg, null, '  '));
+	fs.writeFileSync(p.join(PWD, 'package.json'), JSON.stringify(pkg, null, '  '));
 
 	var spawn = require('child_process').spawn;
 
@@ -152,41 +157,114 @@ function gulpDependencies() {
 			console.log('BOUN: Finished installing, restoring package.json...');
 
 			pkg.dependencies = originalDependencies;
-			fs.writeFileSync(path.join(PWD, 'package.json'), JSON.stringify(pkg, null, '  ') + '\n');
+			fs.writeFileSync(p.join(PWD, 'package.json'), JSON.stringify(pkg, null, '  ') + '\n');
 		});
 	});
 }
 
 function gulpConfig() {
-	var epiphany = getEpiphany();
+	var config = require(p.join(PWD, 'gulp', 'config.js'));
 
-	var config = require(path.join(PWD, 'gulp', 'config.js'))(epiphany.config);
+	fs.writeFileSync(p.join(PWD, 'gulpconfig.js'), 'module.exports = ' + JSON.stringify(config, null, '\t'));
+	console.log('BOUN: Gulp configurations written to PWD/gulpconfig.js.');
+}
 
-	fs.writeFileSync(path.join(PWD, 'gulpconfig.js'), 'module.exports = ' + JSON.stringify(config, null, '\t'));
-	console.log('BEAR-BOUN: Gulp configurations written to PWD/gulpconfig.js.');
+function config(argv) {
+	var dirs = [ p.join(PWD, 'node_modules/epiphany/lib/config') ];
+
+	var dest = p.join(PWD, 'server', 'config');
+
+	var dontOverwrite = !!argv[0] || argv[0] === '-n'; 
+
+	prompt.start();
+
+	recurse(dirs);
+
+	// this shit is all done because prompt is always asynchronous. if
+	// this stupid gay ass code isn't used, the script will continue
+	// instead of waiting for the previous prompt to be answered.
+	function recurse(paths, i, root, parentNext) {
+		i = i || 0;
+
+		var path = paths[i];
+
+		root = root || path;
+
+		var next = recurse.bind(null, paths, ++i, root, parentNext);
+
+		if(!path || !fs.existsSync(path)) {
+			return parentNext ? parentNext() : undefined;
+		}
+
+		if(fs.statSync(path).isDirectory()) {
+			var files = fs.readdirSync(path).map(function(file) {
+				return p.join(path, file);
+			});
+
+			recurse(files, 0, root, next);
+		} else {
+			var questions = [];
+			var target = (p.join(dest, p.relative(root, path)));
+			var targetRelative = './' + p.relative(PWD, target);
+			var pathRelative = './' + p.relative(PWD, path);
+
+			if(fs.existsSync(target)) {
+				if(!dontOverwrite)
+					questions.push({
+						name: 'yesno',
+						message: ('Overwrite ' + targetRelative.yellow  + ' with ' + pathRelative.yellow + '?').white,
+						validator: /y[es]*|n[o]?/,
+						warning: 'Must respond yes or no',
+						default: 'no'
+					});
+			} else {
+				var parentDir = p.dirname(target);
+
+				while(!fs.existsSync(parentDir)) {
+					fs.mkdirSync(parentDir);
+					parentDir = p.dirname(parentDir);
+				}
+			}
+
+			prompt.get(questions, function(err, result) {
+				if(err) process.exit(0);
+
+				if(!dontOverwrite && (questions.length === 0 || result.yesno === 'y')) {
+					console.log(pathRelative.magenta + ' > ' + targetRelative.magenta);
+					fs.createReadStream(path).pipe(fs.createWriteStream(target));
+				}
+
+				next();
+			});
+
+		}
+	}
 }
 
 var argv = process.argv.slice(2);
 
 switch(argv[0]) {
+	case 'config':
+		return config.call(null, argv.slice(1));
 	case 'create-user':
 		return createUser.apply(null, argv.slice(1));
 	case 'change-password':
 		return changePassword.apply(null, argv.slice(1));
 	case 'create-organization':
 		return createOrganization.apply(null, argv.slice(1));
+	case 'deps':
+	case 'dependencies':
+	case 'install':
+		return installDependencies.apply(null, argv.slice(1));
 	case 'gulp':
 		switch(argv[1]) {
 			case 'setup':
 				return gulpSetup.apply(null, argv.slice(2));
 			case 'update':
 				return gulpUpdate.apply(null, argv.slice(2));
-			case 'deps':
-			case 'dependencies':
-				return gulpDependencies.apply(null, argv.slice(2));
 			case 'config':
 				return gulpConfig.apply(null, argv.slice(2));
 		}
 }
 
-console.log("Usage: bear-boun help");
+console.log("Usage: boun help");
