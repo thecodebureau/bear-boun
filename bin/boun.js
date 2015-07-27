@@ -14,7 +14,6 @@ var prompt = require('prompt');
 
 prompt.message = "[" + "?".yellow + "]";
 
-var inquirer = require('inquirer');
 function getEpiphany() {
 
 	var epiphany;
