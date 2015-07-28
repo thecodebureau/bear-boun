@@ -267,8 +267,8 @@ function config(argv) {
 		} else {
 			var questions = [];
 			var target = (p.join(dest, p.relative(root, path)));
-			var targetRelative = './' + p.relative(dest, target);
-			var pathRelative = './' + p.relative(root, path);
+			var targetRelative = './' + p.relative(PWD, target);
+			var pathRelative = './' + p.relative(PWD, path);
 
 			var exists;
 			if(exists = fs.existsSync(target)) {
