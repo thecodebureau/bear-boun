@@ -189,6 +189,21 @@ function gulpConfig() {
 function config(argv) {
 	var dirs = [ p.join(PWD, 'node_modules/epiphany/lib/config') ];
 
+	var modules = require(p.join(PWD, 'server/modules.js'));
+	var appPkg = require(p.join(PWD, 'package.json'));
+
+	modules.forEach(function(module) {
+		var modulePath = p.join(PWD, /\.\//.test(module) ? '' : 'node_modules', module);
+		var configPath = p.join(modulePath, 'config');
+		if(fs.existsSync(configPath))
+			dirs.push(configPath);
+
+		configPath = p.join(modulePath, 'server', 'config');
+
+		if(fs.existsSync(configPath))
+			dirs.push(configPath);
+	});
+
 	var dest = p.join(PWD, 'server', 'config');
 
 	var dontOverwrite = !!argv[0] || argv[0] === '-n'; 
@@ -207,7 +222,7 @@ function config(argv) {
 
 		root = root || path;
 
-		var next = recurse.bind(null, paths, ++i, root, parentNext);
+		var next = recurse.bind(null, paths, ++i, paths === dirs ? null : root, parentNext);
 
 		if(!path || !fs.existsSync(path)) {
 			return parentNext ? parentNext() : undefined;
@@ -222,10 +237,11 @@ function config(argv) {
 		} else {
 			var questions = [];
 			var target = (p.join(dest, p.relative(root, path)));
-			var targetRelative = './' + p.relative(PWD, target);
-			var pathRelative = './' + p.relative(PWD, path);
+			var targetRelative = './' + p.relative(dest, target);
+			var pathRelative = './' + p.relative(root, path);
 
-			if(fs.existsSync(target)) {
+			var exists;
+			if(exists = fs.existsSync(target)) {
 				if(!dontOverwrite)
 					questions.push({
 						name: 'yesno',
@@ -246,7 +262,7 @@ function config(argv) {
 			prompt.get(questions, function(err, result) {
 				if(err) process.exit(0);
 
-				if(!dontOverwrite && (questions.length === 0 || result.yesno === 'y')) {
+				if(!exists || result.yesno === 'y') {
 					console.log(pathRelative.magenta + ' > ' + targetRelative.magenta);
 					fs.createReadStream(path).pipe(fs.createWriteStream(target));
 				}
