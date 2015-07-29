@@ -10,13 +10,21 @@ module.paths.unshift(PWD + '/node_modules');
 var p = require('path');
 var fs = require('fs');
 
+
+var chalk = require('chalk');
+// NOTE prompt uses colors, not chalk
 var prompt = require('prompt');
 
 prompt.message = "[" + "?".yellow + "]";
 
+var bounPrefix = '[' + chalk.yellow('BOUN') + '] ';
+var successPrefix = '[' + chalk.green('SUCCESS') + '] ';
+var errorPrefix = '[' + chalk.red('ERROR') + '] ';
+
 function writePackage(pkg) {
 	fs.writeFileSync(p.join(PWD, 'package.json'), JSON.stringify(pkg, null, '  ') + '\n');
 }
+
 function createUser(email, password) {
 	if(!email || !password) {
 		console.log("Usage: bear-boun create-user email password");
@@ -37,14 +45,14 @@ function createUser(email, password) {
 
 	user.save(function(err, user){
 		if(err) console.error(err);
-		else console.log("Saved user: " + user.email);
+		else console.log(bounPrefix + "Saved user: " + user.email);
 		process.exit(0);
 	});
 }
 
 function changePassword(email, password) {
 	if(!email || !password) {
-		console.log("Usage: bear-boun create-user email password");
+		console.log("Usage: boun create-user [email] [password]");
 		process.exit(0);
 	}
 
@@ -57,14 +65,14 @@ function changePassword(email, password) {
 	User.findOne({ email: email }, function(err, user) {
 		if(err) return console.error(err);
 
-		if(!user) return console.error(new Error('No user with that email'));
+		if(!user) return console.error(errorPrefix + 'No user with that email');
 
 		user.local = user.local || {};
 		user.local.password = password;
 
 		user.save(function(err, user){
 			if(err) console.error(err);
-			else console.log("Updated password for user: " + user.email);
+			else console.log(bounPrefix + "Updated password for user: " + user.email);
 			process.exit(0);
 		});
 	});
@@ -84,7 +92,7 @@ function createOrganization() {
 
 	organization.save(function(err, organization){
 		if(err) console.error(err);
-		else console.log("Saved empty organization");
+		else console.log(successPrefix + "Saved empty organization");
 		process.exit(0);
 	});
 }
@@ -97,8 +105,8 @@ function setup() {
 		console.log(stdout);
 
 		if (error !== null) {
-			console.log('exec error: ' + error);
-			console.log('stderr: ' + stderr);
+			console.log(errorPrefix + 'exec error: ' + error);
+			console.log(errorPrefix + 'stderr: ' + stderr);
 			process.exit(1);
 		}
 
@@ -116,7 +124,7 @@ function setup() {
 						console.log('stderr: ' + stderr);
 						process.exit(1);
 					}
-					console.log('BOUN: Finished setup');
+					console.log(successPrefix + 'Finished setup');
 				});
 			});
 		});
@@ -136,7 +144,7 @@ function install(prune) {
 
 	pkg.dependencies = _.extend({}, pkg.dependencies, gulpPkg.dependencies, gulpPkg._environmentDependencies[ENV]);
 
-	fs.writeFileSync(p.join(PWD, 'package.json'), JSON.stringify(pkg, null, '  '));
+	writePackage(pkg);
 
 	//var dependencies = _.extend({}, pkg.dependencies, gulpPkg.dependencies);
 	//dependencies = _.pairs(dependencies).map(function(arr) {
@@ -147,7 +155,7 @@ function install(prune) {
 		var npmPrune = spawn('npm', [ 'prune' ], { stdio: 'inherit' });
 
 		npmPrune.on('close', function() {
-			console.log('BOUN: Finished removing extraneous packs, installing...');
+			console.log(bounPrefix + 'Finished removing extraneous packs, installing...');
 			run();
 		});
 	} else {
@@ -162,47 +170,69 @@ function install(prune) {
 			pkg.dependencies = originalDependencies;
 			writePackage(pkg);
 
-			console.log('BOUN: All dependencies installed successfully.');
+			console.log(successPrefix + 'All dependencies installed successfully.');
 		});
 	}
 }
 
 function dependencies() {
-	var modules = require(p.join(PWD, 'server/modules.js'));
-	var appPkg = require(p.join(PWD, 'package.json'));
+	var modulesFile = p.join(PWD, 'server/modules.js');
+	var modules;
+	if(fs.existsSync(modulesFile)) {
+		modules = require(p.join(PWD, 'server/modules.js'));
+		var appPkg = require(p.join(PWD, 'package.json'));
 
-	modules.forEach(function(module) {
-		var pkg = require(p.join(/\.\//.test(module) ? PWD : '', module, 'package.json'));
+		modules.forEach(function(module) {
+			var pkg = require(p.join(/\.\//.test(module) ? PWD : '', module, 'package.json'));
 
-		_.extend(appPkg.dependencies, pkg.dependencies);
-	});
-	writePackage(appPkg);
+			console.log(bounPrefix + 'Adding dependencies from ' + chalk.green(module));
+			console.log(_.pairs(pkg.dependencies).map(function(arr) {
+				return arr[0] + '@' + arr[1];
+			}).join('\n - '));
+
+			_.extend(appPkg.dependencies, pkg.dependencies);
+		});
+		writePackage(appPkg);
+
+		console.log(successPrefix + 'Collected dependencies written to package.json.');
+
+	}
+
+	if(!modules || modules.length === 0) {
+		console.log(bounPrefix + 'No modules found.');
+	}
+
+		
 }
 
 function gulpConfig() {
 	var config = require(p.join(PWD, 'gulp', 'config.js'));
 
 	fs.writeFileSync(p.join(PWD, 'gulpconfig.js'), 'module.exports = ' + JSON.stringify(config, null, '\t'));
-	console.log('BOUN: Gulp configurations written to PWD/gulpconfig.js.');
+	console.log(successPrefix + 'Gulp configurations written to PWD/gulpconfig.js.');
 }
 
 function config(argv) {
 	var dirs = [ p.join(PWD, 'node_modules/epiphany/lib/config') ];
 
-	var modules = require(p.join(PWD, 'server/modules.js'));
-	var appPkg = require(p.join(PWD, 'package.json'));
 
-	modules.forEach(function(module) {
-		var modulePath = p.join(PWD, /\.\//.test(module) ? '' : 'node_modules', module);
-		var configPath = p.join(modulePath, 'config');
-		if(fs.existsSync(configPath))
-			dirs.push(configPath);
+	var modulesFile = p.join(PWD, 'server/modules.js');
+	if(fs.existsSync(modulesFile)) {
+		var modules = require(moduleFile);
+		var appPkg = require(p.join(PWD, 'package.json'));
 
-		configPath = p.join(modulePath, 'server', 'config');
+		modules.forEach(function(module) {
+			var modulePath = p.join(PWD, /\.\//.test(module) ? '' : 'node_modules', module);
+			var configPath = p.join(modulePath, 'config');
+			if(fs.existsSync(configPath))
+				dirs.push(configPath);
 
-		if(fs.existsSync(configPath))
-			dirs.push(configPath);
-	});
+			configPath = p.join(modulePath, 'server', 'config');
+
+			if(fs.existsSync(configPath))
+				dirs.push(configPath);
+		});
+	}
 
 	var dest = p.join(PWD, 'server', 'config');
 
