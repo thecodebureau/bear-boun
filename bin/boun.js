@@ -9,9 +9,12 @@ module.paths.unshift(PWD + '/node_modules');
 
 var p = require('path');
 var fs = require('fs');
+var crypto = require('crypto');
 
 
 var chalk = require('chalk');
+var MongoClient = require('mongodb').MongoClient;
+
 // NOTE prompt uses colors, not chalk
 var prompt = require('prompt');
 
@@ -21,79 +24,137 @@ var bounPrefix = '[' + chalk.yellow('BOUN') + '] ';
 var successPrefix = '[' + chalk.green('SUCCESS') + '] ';
 var errorPrefix = '[' + chalk.red('ERROR') + '] ';
 
-function writePackage(pkg) {
+function _writePackage(pkg) {
 	fs.writeFileSync(p.join(PWD, 'package.json'), JSON.stringify(pkg, null, '  ') + '\n');
 }
 
-function createUser(email, password) {
-	if(!email || !password) {
-		console.log("Usage: bear-boun create-user email password");
-		process.exit(0);
+var SALT_LENGTH = 16;
+
+function _hash(password) {
+	// generate salt
+	password = password.trim();
+	var chars = '0123456789abcdefghijklmnopqurstuvwxyz';
+	var salt = '';
+	for (var i = 0; i < SALT_LENGTH; i++) {
+		var j = Math.floor(Math.random() * chars.length);
+		salt += chars[j];
 	}
 
-	var epiphany = getEpiphany().load();
+	// hash the password
+	var passwordHash = crypto.createHash('sha512').update(salt + password).digest('hex');
+
+	// entangle the hashed password with the salt and save to the model
+	return _entangle(passwordHash, salt, password.length);
+}
+
+function _entangle(string, salt, t) {
+	string = salt + string;
+	var length = string.length;
+
+	var arr = string.split('');
+	for(var i = 0; i < salt.length; i++) {
+		var num = ((i + 1) * t) % length;
+		var tmp = arr[i];
+		arr[i] = arr[num];
+		arr[num] = tmp;
+	}
+
+	return arr.join('');
+}
+
+function _mongo(collection, cb) {
+	var mongoConfig = require(p.join(PWD, 'server/config/mongo'))[ENV];
+
+	MongoClient.connect(mongoConfig.uri, function(err, db) {
+		if(err) {
+			console.error(errorPrefix);
+			console.error(err);
+			process.exit(1);
+		}
+		cb(db.collection(collection), db);
+	});
+}
+
+function createUser(email, password, roles) {
+	if(!email || !password) {
+		console.log("Usage: boun create-user [email] [password] [?roles]");
+		process.exit(1);
+	}
 
 
-	//epiphany.loaders.mongoose(epiphany.directories.models, epiphany.directories.plugins, epiphany.directories.schemas);
+	var user = {
+		email: email,
+		local: {
+			password: _hash(password)
+		},
+		dateCreated: new Date()
+	};
 
-	//require('../models/user')(epiphany.mongoose);
-	epiphany.mongoose.connect(epiphany.config.mongo.uri);
+	if(roles) {
+		user.roles = roles.split(',');
+	}
 
-	var User = epiphany.mongoose.model('User');
-
-	var user = new User({email: email, local: { password: password } } );
-
-	user.save(function(err, user){
-		if(err) console.error(err);
-		else console.log(bounPrefix + "Saved user: " + user.email);
-		process.exit(0);
+	_mongo('users', function(users, db) {
+		users.insert(user, function(err, user) {
+			db.close();
+			if(err) {
+				console.error(errorPrefix);
+				console.error(err);
+				process.exit(1);
+			} else {
+				console.log(successPrefix + "Saved user: " + user.ops[0].email);
+				process.exit(0);
+			}
+		});
 	});
 }
 
 function changePassword(email, password) {
 	if(!email || !password) {
-		console.log("Usage: boun create-user [email] [password]");
-		process.exit(0);
+		console.log("Usage: boun change-password [email] [password]");
+		process.exit(1);
 	}
 
-	var epiphany = getEpiphany().load();
 
-	epiphany.mongoose.connect(epiphany.config.mongo.uri);
-
-	var User = epiphany.mongoose.model('User');
-
-	User.findOne({ email: email }, function(err, user) {
-		if(err) return console.error(err);
-
-		if(!user) return console.error(errorPrefix + 'No user with that email');
-
-		user.local = user.local || {};
-		user.local.password = password;
-
-		user.save(function(err, user){
-			if(err) console.error(err);
-			else console.log(bounPrefix + "Updated password for user: " + user.email);
-			process.exit(0);
+	_mongo('users', function(users, db) {
+		users.update({
+			email: email,
+		}, {
+			$set: {
+				'local.password': _hash(password),
+				dateModified: new Date()
+			}
+		}, function(err, user) {
+			db.close();
+			if(err) {
+				console.error(errorPrefix);
+				console.error(err);
+				process.exit(1);
+			} else if(user.result.n < 1) {
+				console.error(errorPrefix + 'No user with that email');
+				process.exit(1);
+			} else {
+				console.log(successPrefix + "Password changed for " + email);
+				process.exit(0);
+			}
 		});
 	});
 }
 
 
 function createOrganization() {
-	var epiphany = getEpiphany();
+	_mongo('organizations', function(orgs, db) {
+		orgs.insert({ dateCreated: new Date() }, function(err, org) {
+			if(err) {
+				console.error(errorPrefix);
+				console.error(err);
+				process.exit(1);
+			} else {
+				console.log(successPrefix + "Empty organization created");
+				process.exit(0);
+			}
 
-	epiphany.load();
-
-	var Organization = epiphany.mongoose.model('Organization');
-
-	var organization = new Organization();
-
-	epiphany.mongoose.connect(epiphany.config.mongo.uri);
-
-	organization.save(function(err, organization){
-		if(err) console.error(err);
-		else console.log(successPrefix + "Saved empty organization");
-		process.exit(0);
+		});
 	});
 }
 
@@ -144,7 +205,7 @@ function install(prune) {
 
 	pkg.dependencies = _.extend({}, pkg.dependencies, gulpPkg.dependencies, gulpPkg._environmentDependencies[ENV]);
 
-	writePackage(pkg);
+	_writePackage(pkg);
 
 	//var dependencies = _.extend({}, pkg.dependencies, gulpPkg.dependencies);
 	//dependencies = _.pairs(dependencies).map(function(arr) {
@@ -168,7 +229,7 @@ function install(prune) {
 
 		npmInstall.on('close', function() {
 			pkg.dependencies = originalDependencies;
-			writePackage(pkg);
+			_writePackage(pkg);
 
 			console.log(successPrefix + 'All dependencies installed successfully.');
 		});
@@ -192,7 +253,7 @@ function dependencies() {
 
 			_.extend(appPkg.dependencies, pkg.dependencies);
 		});
-		writePackage(appPkg);
+		_writePackage(appPkg);
 
 		console.log(successPrefix + 'Collected dependencies written to package.json.');
 
