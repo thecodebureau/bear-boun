@@ -63,7 +63,10 @@ function _entangle(string, salt, t) {
 }
 
 function _mongo(collection, cb) {
-	var mongoConfig = require(p.join(PWD, 'server/config/mongo'))[ENV];
+	var mongoConfig = require(p.join(PWD, 'server/config/mongo'));
+
+	mongoConfig = _.extend({}, mongoConfig.defaults, mongoConfig[ENV]);
+	console.log(mongoConfig);
 
 	MongoClient.connect(mongoConfig.uri, function(err, db) {
 		if(err) {
@@ -279,7 +282,7 @@ function config(argv) {
 
 	var modulesFile = p.join(PWD, 'server/modules.js');
 	if(fs.existsSync(modulesFile)) {
-		var modules = require(moduleFile);
+		var modules = require(modulesFile);
 		var appPkg = require(p.join(PWD, 'package.json'));
 
 		modules.forEach(function(module) {
