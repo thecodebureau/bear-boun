@@ -179,7 +179,7 @@ function setup() {
 		var git = spawn('git', [ 'init' ], { stdio: 'inherit' });
 
 		git.on('close', function() {
-			var gitSubmoduleAdd = spawn('git', [ 'submodule', 'add', 'git@github.com:thecodebureau/gulp.git' ], { stdio: 'inherit' });
+			var gitSubmoduleAdd = spawn('git', [ 'submodule', 'add', 'https://github.com/thecodebureau/gulp.git' ], { stdio: 'inherit' });
 
 			gitSubmoduleAdd.on('close', function() {
 				childProcess.exec('ln -sr ' + p.join(PWD, 'gulp', 'gulpfile.js') + ' ' + p.join(PWD, 'gulpfile.js'), function(error, stdout, stderr) {
