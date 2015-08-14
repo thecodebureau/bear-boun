@@ -269,13 +269,6 @@ function dependencies() {
 		
 }
 
-function gulpConfig() {
-	var config = require(p.join(PWD, 'gulp', 'config.js'));
-
-	fs.writeFileSync(p.join(PWD, 'gulpconfig.js'), 'module.exports = ' + JSON.stringify(config, null, '\t'));
-	console.log(successPrefix + 'Gulp configurations written to PWD/gulpconfig.js.');
-}
-
 function config(argv) {
 	var dirs = [ p.join(PWD, 'node_modules/epiphany/lib/config') ];
 
@@ -386,11 +379,6 @@ switch(argv[0]) {
 		return install.apply(null, argv.slice(1));
 	case 'setup':
 		return setup.apply(null, argv.slice(1));
-	case 'gulp':
-		switch(argv[1]) {
-			case 'config':
-				return gulpConfig.apply(null, argv.slice(2));
-		}
 }
 
 console.log("Usage: boun help");
