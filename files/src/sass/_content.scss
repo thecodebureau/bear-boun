@@ -1,0 +1,20 @@
+
+/* --------- MOD ------------------ */
+
+div.mod {
+	.container {
+		width: 100%;
+		min-height: 300px;
+		> div {
+			float: left;
+			width: 25%;
+			min-height: 200px;
+			border: 1px solid black;
+		}
+	}
+}
+form.spytext {
+	.spytext-field {
+		min-height: 300px;
+	}
+}

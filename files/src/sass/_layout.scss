@@ -1,0 +1,41 @@
+nav {
+	> ul {
+		@include wipe-list;
+		> li { 
+			padding: 0 10px;
+			float: left;
+			&:first-child { padding-left: 0; }
+		}
+	}
+}
+
+body {
+	overflow-x: hidden;
+	overflow-y: scroll;
+	> main {
+		overflow-x: hidden;
+		width: 100%;
+		max-width: $row-max-width;
+		margin: 0 auto;
+		> .page {
+			width: 100%;
+			&.animate {
+				transition: opacity 0.5s ease-out;
+				float: left;
+				position: relative;
+			}
+			&.leave {
+				margin-right: -100%;
+			}
+			&.leave.active {
+				opacity: 0;
+			}
+			&.enter {
+				opacity: 0;
+			}
+			&.enter.active, &.leave {
+				opacity: 1;
+			}
+		}
+	}
+}
