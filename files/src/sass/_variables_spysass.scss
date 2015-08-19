@@ -1,0 +1,78 @@
+// required for rem() and em() to work in this file
+@import "spysass/functions";
+
+//
+// Base
+//
+
+//$include-reset: true;
+//$include-normalize: false;
+
+//$make-image-inline-block: false;
+//$default-float: left;
+//$opposite-direction: right;
+//$text-direction: left;
+//$global-radius: 0;
+//$make-image-inline-block: false;
+
+//$color-main-1: #0066c6;
+//$color-message: #333;
+//$color-error: #c90000;
+//$color-success: #628b1c;
+
+// This needs to be a px value since rem and em-calc use it. It is translated
+// to a percante unit for html and body font-sizing like so: strip-unit($base-font-size) / 16 * 100%;
+//$base-font-size: 16px;
+//$base-line-height: 1.6;
+//$base-line-height-computed: $base-line-height * 1rem;
+
+//$body-font-color: #222;
+//$body-font-family: "Times New Roman", sans-serif;
+//$body-font-weight: normal;
+//$body-font-style: normal;
+//$body-bg: #fff;
+
+//$font-smoothing: subpixel-antialiased;
+
+// Need to be in pixels for IE8
+//$small-range: 0px, 639px;
+//$medium-range: 640px, 1023px;
+//$large-range: 1024px, 1439px;
+//$xlarge-range: 1440px, 1920px;
+//$xxlarge-range: 1921px, 999999px;
+
+//
+// Grid
+//
+
+//$column-gutter: rem(30);
+//$row-width: rem(1000);
+//$total-columns: 12;
+
+// 
+// Type
+//
+
+//$heading-font-family: $body-font-family;
+//$heading-font-weight: bold;
+//$heading-font-style: normal;
+//$heading-font-color: $body-font-color;
+//$heading-text-rendering: optimizeLegibility;
+//$heading-top-margin: $base-line-height-computed;
+//$heading-bottom-margin: $base-line-height-computed / 2;
+//$heading-line-height: 1.2;
+
+//$h1-font-size: 2.5rem;//40px when base-font-size is 16px
+//$h2-font-size: 2.0rem;//32px when base-font-size is 16px
+//$h3-font-size: 1.7rem;//27.2px when base-font-size is 16px
+//$h4-font-size: 1.4rem;//22.4px when base-font-size is 16px
+//$h5-font-size: 1.2rem;//19.2px when base-font-size is 16px
+//$h6-font-size: 1.0rem;
+
+//$paragraph-font-family: $body-font-family;
+//$paragraph-font-weight: normal;
+//$paragraph-font-size: 1.0rem;
+//$paragraph-line-height: $base-line-height;
+//$paragraph-margin: 0 0 ($base-line-height-computed / 2);
+//$paragraph-text-rendering: optimizeLegibility;
+
