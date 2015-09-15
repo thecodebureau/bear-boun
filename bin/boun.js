@@ -400,7 +400,7 @@ function config(argv) {
 				if(!dontOverwrite)
 					questions.push({
 						name: 'yesno',
-						message: chalk.white('Overwrite ' + chalk.yello(targetRelative)	+ ' with ' + chalk.yellow(pathRelative) + '?'),
+						message: chalk.white('Overwrite ' + chalk.yellow(targetRelative)	+ ' with ' + chalk.yellow(pathRelative) + '?'),
 						validator: /y[es]*|n[o]?/,
 						warning: 'Must respond yes or no',
 						default: 'no'
