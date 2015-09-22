@@ -66,7 +66,6 @@ function _mongo(collection, cb) {
 	var mongoConfig = require(p.join(PWD, 'server/config/mongo'));
 
 	mongoConfig = _.extend({}, mongoConfig.defaults, mongoConfig[ENV]);
-	console.log(mongoConfig);
 
 	MongoClient.connect(mongoConfig.uri, function(err, db) {
 		if(err) {
@@ -90,12 +89,11 @@ function createUser(email, password, roles) {
 		local: {
 			password: _hash(password)
 		},
+		roles: [ 'admin' ],
 		dateCreated: new Date()
 	};
 
-	if(roles) {
-		user.roles = roles.split(',');
-	}
+	user.roles = roles ? roles.split(',') : [ 'user' ];
 
 	_mongo('users', function(users, db) {
 		users.insert(user, function(err, user) {
@@ -106,6 +104,25 @@ function createUser(email, password, roles) {
 				process.exit(1);
 			} else {
 				console.log(successPrefix + "Saved user: " + user.ops[0].email);
+				process.exit(0);
+			}
+		});
+	});
+}
+
+function createRoles(roles) {
+
+	roleNames = (roles ? roles.split(',') : [ 'user', 'admin' ]);
+
+	_mongo('roles', function(roles, db) {
+		roles.insert(roleNames.map(function(role) { return { name: role }; }), function(err) {
+			db.close();
+			if(err) {
+				console.error(errorPrefix);
+				console.error(err);
+				process.exit(1);
+			} else {
+				console.log(successPrefix + "Created roles: " + roleNames.join(', '));
 				process.exit(0);
 			}
 		});
@@ -315,19 +332,24 @@ function dependencies() {
 		var appPkg = require(p.join(PWD, 'package.json'));
 
 		modules.forEach(function(module) {
-			var pkg = require(p.join(/\.\//.test(module) ? PWD : '', module, 'package.json'));
+			var pkgFile = p.join(/\.\//.test(module) ? PWD : '', module, 'package.json');
 
-			console.log(bounPrefix + 'Adding dependencies from ' + chalk.green(module));
-			console.log(_.pairs(pkg.dependencies).map(function(arr) {
-				return arr[0] + '@' + arr[1];
-			}).join('\n - '));
+			try {
+				var pkg = require(pkgFile);
 
-			_.extend(appPkg.dependencies, pkg.dependencies);
+				console.log(bounPrefix + 'Adding dependencies from ' + chalk.green(module));
+				console.log(_.pairs(pkg.dependencies).map(function(arr) {
+					return '- ' + arr[0] + '@' + arr[1];
+				}).join('\n'));
+
+				_.extend(appPkg.dependencies, pkg.dependencies);
+			} catch(e) {
+				console.log(bounPrefix + 'No package.json found for ' + module);
+			}
 		});
 		_writePackage(appPkg);
 
 		console.log(successPrefix + 'Collected dependencies written to package.json.');
-
 	}
 
 	if(!modules || modules.length === 0) {
@@ -436,6 +458,8 @@ switch(argv[0]) {
 		return config.call(null, argv.slice(1));
 	case 'create-user':
 		return createUser.apply(null, argv.slice(1));
+	case 'create-roles':
+		return createRoles.apply(null, argv.slice(1));
 	case 'change-password':
 		return changePassword.apply(null, argv.slice(1));
 	case 'create-organization':
