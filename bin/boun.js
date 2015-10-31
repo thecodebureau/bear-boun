@@ -1,11 +1,12 @@
 #!/bin/env node
 
-var _ = require('lodash');
 
 global.PWD = process.env.PWD;
 global.ENV = process.env.NODE_ENV || 'development';
+global._ = require('lodash');
 
 module.paths.unshift(PWD + '/node_modules');
+module.paths.unshift(PWD + '/modules');
 
 var p = require('path');
 var fs = require('fs');
@@ -280,50 +281,6 @@ function setup() {
 	});
 }
 
-function install(prune) {
-	// TODO restore package.json on error or exit
-	prune = prune === '-p';
-
-	var spawn = require('child_process').spawn;
-	// NOTE we write a new package.json file for effeciency. Calling npm install with array of packages
-	// will redownload and install even if correct version already exists.
-	var pkg = require(p.join(PWD, 'package.json'));
-	var gulpPkg = require(p.join(PWD, 'gulp', 'package.json'));
-	var originalDependencies = pkg.dependencies;
-
-	pkg.dependencies = _.extend({}, pkg.dependencies, gulpPkg.dependencies, gulpPkg._environmentDependencies[ENV]);
-
-	_writePackage(pkg);
-
-	//var dependencies = _.extend({}, pkg.dependencies, gulpPkg.dependencies);
-	//dependencies = _.pairs(dependencies).map(function(arr) {
-	//	return arr[0] + '@' + arr[1];
-	//});
-
-	if(prune) {
-		var npmPrune = spawn('npm', [ 'prune' ], { stdio: 'inherit' });
-
-		npmPrune.on('close', function() {
-			console.log(bounPrefix + 'Finished removing extraneous packs, installing...');
-			run();
-		});
-	} else {
-		run();
-	}
-
-	function run() {
-		var npmInstall = spawn('npm',  ['install'], { stdio: 'inherit' });
-		//var npmInstall = spawn('npm',  ['install'].concat(dependencies), { stdio: 'inherit' });
-
-		npmInstall.on('close', function() {
-			pkg.dependencies = originalDependencies;
-			_writePackage(pkg);
-
-			console.log(successPrefix + 'All dependencies installed successfully.');
-		});
-	}
-}
-
 function dependencies() {
 	var modulesFile = p.join(PWD, 'server/modules.js');
 	var modules;
@@ -355,15 +312,51 @@ function dependencies() {
 	if(!modules || modules.length === 0) {
 		console.log(bounPrefix + 'No modules found.');
 	}
+}
 
-		
+function templates(argv) {
+	//var localDir = require(p.join(PWD, 'server/config/dir.js')).src.templates;
+
+	var modulesFile = p.join(PWD, 'server/modules.js');
+
+	var dirs = [];
+	if(fs.existsSync(modulesFile)) {
+		var modules = require(modulesFile);
+
+		modules.forEach(function(module) {
+			try {
+				var paths = require(module + '/paths');
+				if(paths.templates)
+					dirs.push(paths.templates);
+				else
+					console.log(bounPrefix + 'No template path for ' + module);
+			} catch(e) {
+				console.log(bounPrefix + 'No module found for \'' + module + '\' or it does not have a paths file.');
+				return;
+			}
+		});
+	}
+	var gulpConfigPath = p.join(PWD, 'gulpconfig.js');
+	var gulpConfig;
+
+	dirs.unshift(p.join(PWD, 'node_modules/epiphany/templates'));
+
+	if(fs.existsSync(gulpConfigPath))
+		gulpConfig = require(gulpConfigPath);
+	else
+		gulpConfig = {};
+
+	gulpConfig.dust = gulpConfig.dust || {};
+
+	gulpConfig.dust.src = dirs.map(function(dir) { return p.join(dir, '**/*.dust'); });
+	fs.writeFileSync(gulpConfigPath, 'module.exports = ' + JSON.stringify(gulpConfig, null, '\t') + ';');
 }
 
 function config(argv) {
-	var dirs = [ p.join(PWD, 'node_modules/epiphany/lib/config') ];
-
+	var dirs = [ p.join(PWD, 'node_modules/epiphany/config') ];
 
 	var modulesFile = p.join(PWD, 'server/modules.js');
+
 	if(fs.existsSync(modulesFile)) {
 		var modules = require(modulesFile);
 		var appPkg = require(p.join(PWD, 'package.json'));
@@ -401,8 +394,12 @@ function config(argv) {
 
 		var next = recurse.bind(null, paths, ++i, paths === dirs ? null : root, parentNext);
 
-		if(!path || !fs.existsSync(path)) {
-			return parentNext ? parentNext() : undefined;
+		if(!path) {
+			return;
+		}
+		
+		if(!fs.existsSync(path)) {
+			return parentNext ? parentNext() : next();
 		}
 
 		if(fs.statSync(path).isDirectory()) {
@@ -418,7 +415,7 @@ function config(argv) {
 			var pathRelative = './' + p.relative(PWD, path);
 
 			var exists;
-			if(exists = fs.existsSync(target)) {
+			if((exists = fs.existsSync(target))) {
 				if(!dontOverwrite)
 					questions.push({
 						name: 'yesno',
@@ -467,8 +464,8 @@ switch(argv[0]) {
 	case 'deps':
 	case 'dependencies':
 		return dependencies.apply(null, argv.slice(1));
-	case 'install':
-		return install.apply(null, argv.slice(1));
+	case 'templates':
+		return templates.call(null, argv.slice(1));
 	case 'setup':
 		return setup.apply(null, argv.slice(1));
 }
