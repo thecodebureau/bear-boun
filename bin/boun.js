@@ -91,6 +91,7 @@ function createUser(email, password, roles) {
 			password: _hash(password)
 		},
 		roles: [ 'admin' ],
+		isVerified: true,
 		dateCreated: new Date()
 	};
 
