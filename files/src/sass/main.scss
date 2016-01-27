@@ -1,10 +1,22 @@
+@charset "UTF-8";
+
 @import "spysass";
 
+@import "variables-spysass";
+@import "variables";
+
+// reset, similar (or maybe identical) to eric meyer's
+@import "components/reset";
+
+@import "components/base";
 @import "components/type";
 @import "components/grid";
 
-@import "themes/spytext/niknus";
 @import "themes/form/foundation";
+@import "themes/form/fieldset/foundation";
+@import "themes/form/labels/linus";
+@import "themes/form/validation/linus";
 
+@import "styles";
 @import "layout";
 @import "content";

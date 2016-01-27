@@ -66,8 +66,6 @@ function _entangle(string, salt, t) {
 function _mongo(collection, cb) {
 	var mongoConfig = require(p.join(PWD, 'server/config/mongo'));
 
-	mongoConfig = _.extend({}, mongoConfig.defaults, mongoConfig[ENV]);
-
 	MongoClient.connect(mongoConfig.uri, function(err, db) {
 		if(err) {
 			console.error(errorPrefix);
@@ -90,12 +88,10 @@ function createUser(email, password, roles) {
 		local: {
 			password: _hash(password)
 		},
-		roles: [ 'admin' ],
+		roles: roles ? roles.split(',') : [ 'admin' ],
 		isVerified: true,
 		dateCreated: new Date()
 	};
-
-	user.roles = roles ? roles.split(',') : [ 'user' ];
 
 	_mongo('users', function(users, db) {
 		users.insert(user, function(err, user) {
@@ -198,88 +194,36 @@ function setup() {
 
 		console.log(successPrefix + 'All files copied successfully.');
 
-		var pkg = {
-			"name": "change-this-fool",
-			"version": "0.0.0",
-			"description": "",
-			"main": "./server/server.js",
-			"scripts": {
-				"test": "echo \"Error: no test specified\" && exit 1"
-			},
-			"author": "The Code Bureau <info@thecodebureau.com> (https://thecodebureau.com)",
-			"dependencies": {}
-		};
+		//var pkg = {
+		//	"name": "change-this-fool",
+		//	"version": "0.0.0",
+		//	"description": "",
+		//	"main": "./server/server.js",
+		//	"scripts": {
+		//		"test": "echo \"Error: no test specified\" && exit 1"
+		//	},
+		//	"author": "The Code Bureau <info@thecodebureau.com> (https://thecodebureau.com)",
+		//	"dependencies": {
+		//		"epiphany": "github:thecodebureau/epiphany",
+		//		"hats": "github:thecodebureau/hats",
+		//		"ridge": "github:thecodebureau/ridge#devel",
+		//		"sprinkles": "github:thecodebureau/sprinkles",
+		//		"spysass": "github:thecodebureau/spysass"
+		//	}
+		//};
 
-		console.log('fetching package info of hats');
+		//_writePackage(pkg);
 
-		exec('npm view --json hats', function(error, stdout, stderr) {
-			var done = function() {
-				console.log(successPrefix + 'All dependencies fetched. Result:');
-				console.log(deps);
-				pkg.dependencies = deps;
-				_writePackage(pkg);
-				console.log(successPrefix + chalk.magenta('package.json') + ' written.');
-				var git = spawn('git', [ 'init' ], { stdio: 'inherit' });
+		//console.log(successPrefix + chalk.magenta('package.json') + ' written.');
 
-				git.on('close', function() {
-					var gitSubmoduleAdd = spawn('git', [ 'submodule', 'add', 'https://github.com/thecodebureau/gulp.git' ], { stdio: 'inherit' });
+		var git = spawn('git', [ 'init' ], { stdio: 'inherit' });
 
-					gitSubmoduleAdd.on('close', function() {
-						exec('ln -sr ' + p.join(PWD, 'gulp', 'gulpfile.js') + ' ' + p.join(PWD, 'gulpfile.js'), function(error, stdout, stderr) {
-							if (error !== null) {
-								console.log('exec error: ' + error);
-								console.log('stderr: ' + stderr);
-								process.exit(1);
-							}
-							console.log(successPrefix + 'Finished setup');
-						});
-					});
-				});
-			};
-			function add(name, version) {
-				if(deps[name]) {
-					if(deps[name] === version) {
-						console.log(bounPrefix + 'Skipping package ' + name + '@' + version + ', is already a dependency.');
-						return;
-					}
-	
-					var current = _.trim(deps[name], '^~');
-					var other = _.trim(version, '^~');
-
-					// not, all version assumed to be correct semvar, thus arrays will
-					// always be length 3
-					for(var i = 0; i < 3; i++) {
-						if(current[i] > other[i]) {
-							console.log(bounPrefix + 'Skipping package ' + name + '@' + version + ', is already a dependency.');
-							return;
-						}
-					}
-				}
-
-				deps[name] = version;
-				console.log(bounPrefix + 'Package ' + chalk.cyan(name + '@' + version) + ' added as dependency.');
-				return true;
-			}
-			var hatsPkg = JSON.parse(stdout);
-			var deps = {};
-			add('hats', '^' + hatsPkg.version);
-			done = _.after(_.keys(hatsPkg.peerDependencies).length, done);
-
-			_.each(hatsPkg.peerDependencies, function(version, name) {
-				if(add(name, version)) {
-					console.log(bounPrefix + 'Fetching peerDependencies for package ' + name + '@' + version + '.');
-					exec('npm view --json ' + name + '@' + version, function(error, stdout, stderr) {
-						_.each(JSON.parse(stdout).peerDependencies, function(version, name) {
-							add(name, version);
-							done();
-						});
-					});
-				} else {
-					done();
-				}
-			});
+		git.on('close', function() {
+			console.log(successPrefix + 'Git repository initialized.');
 		});
+
 	});
+
 }
 
 function dependencies() {
@@ -349,8 +293,9 @@ function templates(argv) {
 
 	gulpConfig.dust = gulpConfig.dust || {};
 
+	console.log(PWD);
 	gulpConfig.dust.src = dirs.map(function(dir) { return p.join(dir, '**/*.dust'); });
-	fs.writeFileSync(gulpConfigPath, 'module.exports = ' + JSON.stringify(gulpConfig, null, '\t') + ';');
+	fs.writeFileSync(gulpConfigPath, ('module.exports = ' + JSON.stringify(gulpConfig, null, '\t') + ';').replace(new RegExp('"' + PWD, 'g'), 'PWD + "'));
 }
 
 function config(argv) {
@@ -396,6 +341,9 @@ function config(argv) {
 		var next = recurse.bind(null, paths, ++i, paths === dirs ? null : root, parentNext);
 
 		if(!path) {
+			if(parentNext)
+				return parentNext();
+
 			return;
 		}
 		

@@ -1,9 +1,9 @@
 module.exports = [
 	// hats > hats
-	//'hats/base',
-	//'hats/admin',
-	//'hats/errors',
-	//'hats/organization',
+	'hats/admin',
+	'hats/errors',
+	'hats/organization',
+	'hats/content',
 	//'hats/news',
 	//'hats/gallery',
 	//'hats/employees',

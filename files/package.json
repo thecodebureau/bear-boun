@@ -1,11 +1,19 @@
 {
   "name": "change-this-fool",
   "version": "0.0.0",
-  "description": "",
+  "description": "Change this you fool.",
   "main": "./server/server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "The Code Bureau <info@thecodebureau.com> (https://thecodebureau.com)",
-  "dependencies": {}
+  "dependencies": {
+    "dustjs-linkedin": "^2.7.2",
+    "epiphany": "github:thecodebureau/epiphany",
+    "hats": "github:thecodebureau/hats",
+    "nodemailer": "^1.10.0",
+    "ridge": "github:thecodebureau/ridge",
+    "sprinkles": "github:thecodebureau/sprinkles",
+    "spysass": "github:thecodebureau/spysass"
+  }
 }
